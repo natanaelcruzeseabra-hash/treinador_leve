@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#14532d">
+  
+  <!-- Configurações PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Treinador Leve">
+  <link rel="apple-touch-icon" href="https://via.placeholder.com/192/14532d/ffffff?text=Treino">
+
+  <title>Treinador Leve V3</title>
+  <style>
+    :root{--bg:#f5f7f5;--card:#fff;--ink:#17201a;--muted:#68736b;--brand:#166534;--soft:#dcfce7;--line:#dfe6e1;--warn:#92400e}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px system-ui,-apple-system,Segoe UI,sans-serif}header{position:sticky;top:0;z-index:4;background:#14532d;color:#fff;padding:14px 16px}header h1{font-size:19px;margin:0}header small{opacity:.85}main{max-width:860px;margin:auto;padding:12px 12px 90px}.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin:10px 0;box-shadow:0 2px 8px #1020180a}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}button,.button{border:0;border-radius:12px;padding:12px;background:var(--brand);color:#fff;font-weight:700;text-align:center;cursor:pointer}button.light{background:var(--soft);color:var(--brand)}button.ghost{background:#eef1ef;color:#243029}h2,h3{margin:4px 0 10px}p{line-height:1.4}.muted{color:var(--muted);font-size:13px}.view{display:none}.view.active{display:block}.work{display:grid;grid-template-columns:28px 1fr 70px 60px;gap:7px;align-items:center;border-top:1px solid var(--line);padding:10px 0}.work:first-of-type{border-top:0}.work input[type=number]{width:100%;padding:9px 4px;border:1px solid var(--line);border-radius:9px}.work small{display:block;color:var(--muted)}.badge{display:inline-block;background:#eff6f1;padding:3px 7px;border-radius:99px;font-size:11px;margin-top:3px}.complement{border-left:3px solid #f59e0b;padding-left:8px}.topline{display:flex;justify-content:space-between;gap:8px;align-items:center}.row{display:flex;flex-wrap:wrap;gap:8px}textarea,input,select{font:inherit}textarea{width:100%;min-height:78px;border:1px solid var(--line);border-radius:10px;padding:10px}.stats{display:grid;grid-template-columns:repeat(4,1fr);text-align:center;gap:5px}.stats b{font-size:20px;display:block}.stats small{font-size:10px;color:var(--muted)}.fields{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.fields input{width:100%;padding:9px;border:1px solid var(--line);border-radius:8px;margin-top:4px}.progress{height:10px;background:#e5e7eb;border-radius:99px;overflow:hidden;margin-top:12px}.progress i{height:100%;display:block;background:#22c55e;width:0}nav{position:fixed;bottom:0;left:0;right:0;z-index:5;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:center;padding:7px}nav button{background:transparent;color:var(--muted);padding:9px 12px}nav button.on{color:var(--brand);background:var(--soft)}details summary{cursor:pointer;font-weight:700}@media(max-width:560px){.fields{grid-template-columns:1fr}.work{grid-template-columns:26px 1fr 60px 52px}.grid{grid-template-columns:1fr 1fr}}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Treinador Leve V3</h1>
+    <small>32 anos • iniciante • 4×/semana • meta 90 kg</small>
+  </header>
+  <main>
+    <section id="home" class="view active">
+      <div class="card">
+        <h2>Qual treino hoje?</h2>
+        <p class="muted">Sugestão: A → B → descanso/leve → C → A/B alternado. Faça 5–8 min de aquecimento, cerca de 55–60 min de musculação e 15 min de cardio confortável.</p>
+        <div class="grid">
+          <button onclick="openWorkout('A')">A • Peito</button>
+          <button onclick="openWorkout('B')">B • Costas</button>
+          <button onclick="openWorkout('C')">C • Pernas</button>
+          <button class="light" onclick="show('history')">Histórico</button>
+          <button class="ghost" onclick="focusGroup('Peito')">Peito</button>
+          <button class="ghost" onclick="focusGroup('Pernas')">Pernas</button>
+          <button class="ghost" onclick="focusGroup('Costas')">Costas</button>
+          <button class="ghost" onclick="show('free')">Treinos livres</button>
+        </div>
+      </div>
+      <section class="card stats">
+        <div><b id="streak">0</b><small>sequência</small></div>
+        <div><b id="month">0</b><small>treinos/mês</small></div>
+        <div><b id="minutes">0</b><small>minutos</small></div>
+        <div><b id="volume">0</b><small>kg movidos</small></div>
+      </section>
+      <section class="card">
+        <h3>Integração de saúde</h3>
+        <p class="muted">Este PWA salva no aparelho. Use “Exportar treino” para levar os registros a um app Android/Health Connect.</p>
+        <div class="row">
+          <button onclick="exportJSON()">Exportar JSON</button>
+          <button onclick="exportCSV()">Exportar CSV</button>
+          <label class="button">Importar JSON<input hidden type="file" accept="application/json" onchange="importJSON(event)"></label>
+        </div>
+      </section>
+      <section class="card">
+        <h3>Progresso corporal</h3>
+        <div class="fields">
+          <label>Peso atual (kg)<input id="bodyWeight" type="number" step="0.1" value="125" onchange="saveProfile()"></label>
+          <label>Meta (kg)<input id="goalWeight" type="number" step="0.1" value="90" onchange="saveProfile()"></label>
+          <label>Cintura (cm)<input id="waist" type="number" step="0.1" onchange="saveProfile()"></label>
+        </div>
+        <div class="progress"><i id="goalBar"></i></div>
+        <p id="goalText" class="muted"></p>
+      </section>
+      <section class="card">
+        <h3>Segurança e intensidade</h3>
+        <p class="muted">Comece com carga que permita terminar as repetições mantendo 2–3 repetições “na reserva”. Sem dor aguda. Aumente apenas 2–5% quando completar todas as séries com técnica estável em duas sessões. Para exercícios de pernas, ajuste banco e amplitude ao conforto.</p>
+      </section>
+    </section>
+
+    <section id="workout" class="view">
+      <div class="card">
+        <div class="topline">
+          <div>
+            <h2 id="wtitle"></h2>
+            <p id="wsub" class="muted"></p>
+          </div>
+          <button class="light" onclick="show('home')">Voltar</button>
+        </div>
+        <div id="exerciseList"></div>
+        <h3>Cardio • 15 min</h3>
+        <div class="fields">
+          <label>Tipo<select id="cardioType"><option>Caminhada</option><option>Bicicleta</option><option>Elíptico</option></select></label>
+          <label>Minutos<input id="cardioMin" type="number" value="15"></label>
+          <label>Esforço (1–10)<input id="cardioRpe" type="number" min="1" max="10" value="5"></label>
+        </div>
+        <p class="muted">Ritmo moderado: respiração mais rápida, mas ainda capaz de conversar.</p>
+        <button onclick="finishWorkout()">Concluir e salvar</button>
+      </div>
+    </section>
+
+    <section id="history" class="view">
+      <div class="card">
+        <div class="topline">
+          <h2>Histórico</h2>
+          <button class="light" onclick="show('home')">Voltar</button>
+        </div>
+        <div id="historyList"></div>
+      </div>
+    </section>
+
+    <section id="free" class="view">
+      <div class="card">
+        <div class="topline">
+          <h2>Treinos livres</h2>
+          <button class="light" onclick="show('home')">Voltar</button>
+        </div>
+        <h3>Livre 1</h3>
+        <textarea id="free1" placeholder="Exercícios, cargas, séries e observações"></textarea>
+        <h3>Livre 2</h3>
+        <textarea id="free2" placeholder="Exercícios, cargas, séries e observações"></textarea>
+        <button onclick="saveFree()">Salvar</button>
+      </div>
+    </section>
+  </main>
+
+  <nav>
+    <button data-v="home" class="on" onclick="show('home')">Início</button>
+    <button data-v="workout" onclick="show('workout')">Treino</button>
+    <button data-v="history" onclick="show('history')">Histórico</button>
+    <button data-v="free" onclick="show('free')">Livres</button>
+  </nav>
+
+  <script>
+    const PROGRAM={"A":{"title":"Treino A • Peito, ombros e tríceps","focus":"Peito","items":[["Supino reto na máquina","Supino com halteres","Peito","3","10–12","Específico"],["Supino inclinado na máquina","Halteres em banco inclinado","Peito superior","3","10–12","Específico"],["Crucifixo na máquina","Crossover na polia","Peito","3","12–15","Específico"],["Crossover médio","Crucifixo com halteres leves","Peito","3","12–15","Específico"],["Flexão inclinada","Chest press leve","Peito","2","8–12","Específico"],["Desenvolvimento na máquina","Halteres com encosto","Ombros","3","10–12","Específico"],["Elevação lateral sentada","Elevação lateral na polia","Ombros","3","12–15","Específico"],["Tríceps na corda","Tríceps barra V","Tríceps","3","10–15","Específico"],["Face pull leve","Crucifixo inverso na máquina","Estabilidade escapular","2","12–15","Complementar"],["Rotação externa com elástico","Rotação externa na polia","Manguito rotador","2","12–15","Complementar"],["Dead bug","Bird dog","Core","2","8–10/lado","Complementar"],["Alongamento peitoral na parede","Mobilidade torácica","Mobilidade","2","30 s","Complementar"]]},"B":{"title":"Treino B • Costas e bíceps","focus":"Costas","items":[["Puxada frontal pegada neutra","Puxada aberta confortável","Dorsais","3","10–12","Específico"],["Remada baixa sentada","Remada articulada","Costas","3","10–12","Específico"],["Remada máquina com apoio","Remada unilateral apoiada","Costas médias","3","10–12","Específico"],["Pulldown braços retos","Pullover na máquina","Dorsais","3","12–15","Específico"],["Remada unilateral na polia","Remada serrote apoiada","Costas","3","10–12/lado","Específico"],["Crucifixo inverso máquina","Face pull","Deltoide posterior","3","12–15","Específico"],["Rosca direta barra W","Rosca na máquina","Bíceps","3","10–12","Específico"],["Rosca martelo","Rosca na corda","Bíceps/antebraço","3","10–12","Específico"],["Extensão torácica no banco","Mobilidade gato-vaca","Coluna torácica","2","8–10","Complementar"],["Bird dog","Dead bug","Core/estabilidade","2","8/lado","Complementar"],["Farmer walk leve","Sustentação de halteres","Pegada/core","2","30 s","Complementar"],["Alongamento de dorsais","Postura da criança","Mobilidade","2","30 s","Complementar"]]},"C":{"title":"Treino C • Pernas e core","focus":"Pernas","items":[["Leg press 45° amplitude confortável","Agachamento no banco","Quadríceps/glúteos","3","10–12","Específico"],["Cadeira extensora leve","Leg press pés baixos","Quadríceps","3","12–15","Específico"],["Mesa flexora","Cadeira flexora","Posterior de coxa","3","10–12","Específico"],["Cadeira flexora","Mesa flexora unilateral","Posterior de coxa","3","10–12","Específico"],["Glúteo máquina","Ponte de glúteo","Glúteos","3","12–15","Específico"],["Cadeira abdutora","Abdução na polia","Glúteo médio","3","12–15","Específico"],["Panturrilha sentada","Panturrilha no leg press","Panturrilhas","3","12–15","Específico"],["Panturrilha em pé apoiada","Máquina de panturrilha","Panturrilhas","3","12–15","Específico"],["Pallof press","Prancha inclinada","Core","2","10/lado","Complementar"],["Mobilidade de tornozelo","Alongamento de panturrilha","Mobilidade","2","30 s/lado","Complementar"],["Alongamento flexor do quadril","Ponte sem carga","Mobilidade do quadril","2","30 s/lado","Complementar"],["Caminhada lateral com elástico","Abdutora leve","Estabilidade do joelho","2","10/lado","Complementar"]]}},VERSION=3;let current='A';const KEY='trainer_v'+VERSION;let state=JSON.parse(localStorage.getItem(KEY)||'{"history":[],"drafts":{},"profile":{"start":125,"weight":125,"goal":90}}');
+    function persist(){localStorage.setItem(KEY,JSON.stringify(state));updateStats()}
+    function show(id){document.querySelectorAll('.view').forEach(x=>x.classList.toggle('active',x.id===id));document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on',x.dataset.v===id));if(id==='history')renderHistory();scrollTo(0,0)}
+    function openWorkout(k){current=k;show('workout');renderWorkout()}
+    function focusGroup(g){let k=g==='Peito'?'A':g==='Costas'?'B':'C';openWorkout(k)}
+    function renderWorkout(){let p=PROGRAM[current],d=state.drafts[current]||{};wtitle.textContent=p.title;wsub.textContent='8 específicos + 4 complementares.';exerciseList.innerHTML=p.items.map((x,i)=>`<div class="work ${x[5]==='Complementar'?'complement':''}"><input aria-label="feito" type="checkbox" ${d[i]?.done?'checked':''} onchange="setEx(${i},'done',this.checked)"><div><b>${x[0]}</b><small>Alt: ${x[1]}</small><span class="badge">${x[2]} • ${x[5]}</span></div><input aria-label="peso" type="number" step="0.5" placeholder="kg" value="${d[i]?.weight||''}" onchange="setEx(${i},'weight',this.value)"><div><b>${x[3]}×</b><small>${x[4]}</small></div></div>`).join('')}
+    function setEx(i,f,v){state.drafts[current]??={};state.drafts[current][i]??={};state.drafts[current][i][f]=v;if(f==='weight'&&v!==''&&Number(v)>=0)state.drafts[current][i].done=true;persist();renderWorkout()}
+    function finishWorkout(){let d=state.drafts[current]||{},done=Object.values(d).filter(x=>x.done).length;if(!done){alert('Registre ao menos um exercício.');return}let vol=0;PROGRAM[current].items.forEach((x,i)=>{let z=d[i];if(z?.done&&z.weight)vol+=Number(z.weight)*Number(x[3])*(parseInt(x[4])||10)});state.history.unshift({id:Date.now(),date:new Date().toISOString(),workout:current,count:done,cardio:Number(cardioMin.value)||0,cardioType:cardioType.value,rpe:Number(cardioRpe.value)||0,volume:Math.round(vol)});state.drafts[current]={};persist();alert('Treino salvo.');show('history')}
+    function renderHistory(){historyList.innerHTML=state.history.length?state.history.map(h=>`<div class="card"><b>${new Date(h.date).toLocaleDateString('pt-BR')} • Treino ${h.workout}</b><small>${h.count} exer. • ${h.cardio} min ${h.cardioType} • RPE ${h.rpe}/10${h.volume?' • '+h.volume+' kg':''}</small></div>`).join(''):'<p class="muted">Nenhum treino salvo.</p>'}
+    function saveFree(){state.free1=free1.value;state.free2=free2.value;persist();alert('Treinos livres salvos.')}
+    function updateStats(){if(VERSION<2)return;let now=new Date(),m=state.history.filter(h=>{let d=new Date(h.date);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear()});month.textContent=m.length;minutes.textContent=state.history.reduce((a,h)=>a+h.cardio+60,0);volume.textContent=state.history.reduce((a,h)=>a+(h.volume||0),0);let days=[...new Set(state.history.map(h=>h.date.slice(0,10)))].sort().reverse(),s=days.length?1:0;for(let i=1;i<days.length;i++){if((new Date(days[i-1])-new Date(days[i]))/86400000<=2)s++;else break}streak.textContent=s}
+    function saveProfile(){state.profile.weight=Number(bodyWeight.value)||125;state.profile.goal=Number(goalWeight.value)||90;state.profile.waist=Number(waist.value)||0;persist();goalUI()}
+    function goalUI(){if(VERSION<3)return;bodyWeight.value=state.profile.weight||125;goalWeight.value=state.profile.goal||90;waist.value=state.profile.waist||'';let total=(state.profile.start||125)-state.profile.goal,lost=(state.profile.start||125)-state.profile.weight,p=Math.max(0,Math.min(100,lost/total*100));goalBar.style.width=p+'%';goalText.textContent=`${p.toFixed(0)}% do caminho • faltam ${Math.max(0,state.profile.weight-state.profile.goal).toFixed(1)} kg.`}
+    function exportJSON(){download('treinos_backup.json',JSON.stringify(state,null,2),'application/json')}
+    function exportCSV(){let rows=['data,treino,exercicios,cardio_min,tipo,rpe,volume_estimado'];state.history.forEach(h=>rows.push([h.date,h.workout,h.count,h.cardio,h.cardioType,h.rpe,h.volume||0].join(',')));download('historico_treinos.csv',rows.join('\n'),'text/csv')}
+    function download(n,t,type){let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type}));a.download=n;a.click();URL.revokeObjectURL(a.href)}
+    function importJSON(e){let f=e.target.files[0],r=new FileReader;r.onload=()=>{try{state=JSON.parse(r.result);persist();goalUI();alert('Dados importados.')}catch{alert('Arquivo inválido.')}};r.readAsText(f)}
+    free1.value=state.free1||'';free2.value=state.free2||'';updateStats();goalUI();
+
+    // Registro do Service Worker para PWA
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(err => console.log('SW erro:', err));
+      });
+    }
+  </script>
+</body>
+</html>
