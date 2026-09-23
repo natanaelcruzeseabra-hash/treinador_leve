@@ -79,12 +79,20 @@
           <button class="light" onclick="show('home')">Voltar</button>
         </div>
         <div id="exerciseList"></div>
+        
         <h3>Cardio • 15 min</h3>
         <div class="fields">
           <label>Tipo<select id="cardioType"><option>Caminhada</option><option>Bicicleta</option><option>Elíptico</option></select></label>
           <label>Minutos<input id="cardioMin" type="number" value="15"></label>
           <label>Esforço (1–10)<input id="cardioRpe" type="number" min="1" max="10" value="5"></label>
         </div>
+        
+        <div class="fields" style="margin-top:15px;">
+          <label>Data do Treino
+            <input id="workoutDate" type="date">
+          </label>
+        </div>
+
         <p class="muted">Ritmo moderado: respiração mais rápida, mas ainda capaz de conversar.</p>
         <button onclick="finishWorkout()">Concluir e salvar</button>
       </div>
@@ -95,6 +103,14 @@
         <div class="topline">
           <h2>Histórico</h2>
           <button class="light" onclick="show('home')">Voltar</button>
+        </div>
+        <div class="fields" style="margin-bottom: 15px;">
+          <label>Filtrar de
+            <input id="filterFrom" type="date" onchange="renderHistory()">
+          </label>
+          <label>Até
+            <input id="filterTo" type="date" onchange="renderHistory()">
+          </label>
         </div>
         <div id="historyList"></div>
       </div>
@@ -126,12 +142,81 @@
     const PROGRAM={"A":{"title":"Treino A • Peito, ombros e tríceps","focus":"Peito","items":[["Supino reto na máquina","Supino com halteres","Peito","3","10–12","Específico"],["Supino inclinado na máquina","Halteres em banco inclinado","Peito superior","3","10–12","Específico"],["Crucifixo na máquina","Crossover na polia","Peito","3","12–15","Específico"],["Crossover médio","Crucifixo com halteres leves","Peito","3","12–15","Específico"],["Flexão inclinada","Chest press leve","Peito","2","8–12","Específico"],["Desenvolvimento na máquina","Halteres com encosto","Ombros","3","10–12","Específico"],["Elevação lateral sentada","Elevação lateral na polia","Ombros","3","12–15","Específico"],["Tríceps na corda","Tríceps barra V","Tríceps","3","10–15","Específico"],["Face pull leve","Crucifixo inverso na máquina","Estabilidade escapular","2","12–15","Complementar"],["Rotação externa com elástico","Rotação externa na polia","Manguito rotador","2","12–15","Complementar"],["Dead bug","Bird dog","Core","2","8–10/lado","Complementar"],["Alongamento peitoral na parede","Mobilidade torácica","Mobilidade","2","30 s","Complementar"]]},"B":{"title":"Treino B • Costas e bíceps","focus":"Costas","items":[["Puxada frontal pegada neutra","Puxada aberta confortável","Dorsais","3","10–12","Específico"],["Remada baixa sentada","Remada articulada","Costas","3","10–12","Específico"],["Remada máquina com apoio","Remada unilateral apoiada","Costas médias","3","10–12","Específico"],["Pulldown braços retos","Pullover na máquina","Dorsais","3","12–15","Específico"],["Remada unilateral na polia","Remada serrote apoiada","Costas","3","10–12/lado","Específico"],["Crucifixo inverso máquina","Face pull","Deltoide posterior","3","12–15","Específico"],["Rosca direta barra W","Rosca na máquina","Bíceps","3","10–12","Específico"],["Rosca martelo","Rosca na corda","Bíceps/antebraço","3","10–12","Específico"],["Extensão torácica no banco","Mobilidade gato-vaca","Coluna torácica","2","8–10","Complementar"],["Bird dog","Dead bug","Core/estabilidade","2","8/lado","Complementar"],["Farmer walk leve","Sustentação de halteres","Pegada/core","2","30 s","Complementar"],["Alongamento de dorsais","Postura da criança","Mobilidade","2","30 s","Complementar"]]},"C":{"title":"Treino C • Pernas e core","focus":"Pernas","items":[["Leg press 45° amplitude confortável","Agachamento no banco","Quadríceps/glúteos","3","10–12","Específico"],["Cadeira extensora leve","Leg press pés baixos","Quadríceps","3","12–15","Específico"],["Mesa flexora","Cadeira flexora","Posterior de coxa","3","10–12","Específico"],["Cadeira flexora","Mesa flexora unilateral","Posterior de coxa","3","10–12","Específico"],["Glúteo máquina","Ponte de glúteo","Glúteos","3","12–15","Específico"],["Cadeira abdutora","Abdução na polia","Glúteo médio","3","12–15","Específico"],["Panturrilha sentada","Panturrilha no leg press","Panturrilhas","3","12–15","Específico"],["Panturrilha em pé apoiada","Máquina de panturrilha","Panturrilhas","3","12–15","Específico"],["Pallof press","Prancha inclinada","Core","2","10/lado","Complementar"],["Mobilidade de tornozelo","Alongamento de panturrilha","Mobilidade","2","30 s/lado","Complementar"],["Alongamento flexor do quadril","Ponte sem carga","Mobilidade do quadril","2","30 s/lado","Complementar"],["Caminhada lateral com elástico","Abdutora leve","Estabilidade do joelho","2","10/lado","Complementar"]]}},VERSION=3;let current='A';const KEY='trainer_v'+VERSION;let state=JSON.parse(localStorage.getItem(KEY)||'{"history":[],"drafts":{},"profile":{"start":125,"weight":125,"goal":90}}');
     function persist(){localStorage.setItem(KEY,JSON.stringify(state));updateStats()}
     function show(id){document.querySelectorAll('.view').forEach(x=>x.classList.toggle('active',x.id===id));document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on',x.dataset.v===id));if(id==='history')renderHistory();scrollTo(0,0)}
-    function openWorkout(k){current=k;show('workout');renderWorkout()}
+    
+    function openWorkout(k){
+      current=k;
+      show('workout');
+      renderWorkout();
+      document.getElementById('workoutDate').value = new Date().toISOString().split('T')[0];
+    }
+    
     function focusGroup(g){let k=g==='Peito'?'A':g==='Costas'?'B':'C';openWorkout(k)}
-    function renderWorkout(){let p=PROGRAM[current],d=state.drafts[current]||{};wtitle.textContent=p.title;wsub.textContent='8 específicos + 4 complementares.';exerciseList.innerHTML=p.items.map((x,i)=>`<div class="work ${x[5]==='Complementar'?'complement':''}"><input aria-label="feito" type="checkbox" ${d[i]?.done?'checked':''} onchange="setEx(${i},'done',this.checked)"><div><b>${x[0]}</b><small>Alt: ${x[1]}</small><span class="badge">${x[2]} • ${x[5]}</span></div><input aria-label="peso" type="number" step="0.5" placeholder="kg" value="${d[i]?.weight||''}" onchange="setEx(${i},'weight',this.value)"><div><b>${x[3]}×</b><small>${x[4]}</small></div></div>`).join('')}
-    function setEx(i,f,v){state.drafts[current]??={};state.drafts[current][i]??={};state.drafts[current][i][f]=v;if(f==='weight'&&v!==''&&Number(v)>=0)state.drafts[current][i].done=true;persist();renderWorkout()}
-    function finishWorkout(){let d=state.drafts[current]||{},done=Object.values(d).filter(x=>x.done).length;if(!done){alert('Registre ao menos um exercício.');return}let vol=0;PROGRAM[current].items.forEach((x,i)=>{let z=d[i];if(z?.done&&z.weight)vol+=Number(z.weight)*Number(x[3])*(parseInt(x[4])||10)});state.history.unshift({id:Date.now(),date:new Date().toISOString(),workout:current,count:done,cardio:Number(cardioMin.value)||0,cardioType:cardioType.value,rpe:Number(cardioRpe.value)||0,volume:Math.round(vol)});state.drafts[current]={};persist();alert('Treino salvo.');show('history')}
-    function renderHistory(){historyList.innerHTML=state.history.length?state.history.map(h=>`<div class="card"><b>${new Date(h.date).toLocaleDateString('pt-BR')} • Treino ${h.workout}</b><small>${h.count} exer. • ${h.cardio} min ${h.cardioType} • RPE ${h.rpe}/10${h.volume?' • '+h.volume+' kg':''}</small></div>`).join(''):'<p class="muted">Nenhum treino salvo.</p>'}
+    
+    function renderWorkout(){
+      let p=PROGRAM[current],d=state.drafts[current]||{};
+      wtitle.textContent=p.title;
+      wsub.textContent='8 específicos + 4 complementares.';
+      exerciseList.innerHTML=p.items.map((x,i)=>`<div class="work ${x[5]==='Complementar'?'complement':''}"><input aria-label="feito" type="checkbox" ${d[i]?.done?'checked':''} onchange="setEx(${i},'done',this.checked)"><div><b>${x[0]}</b><small>Alt: ${x[1]}</small><span class="badge">${x[2]} • ${x[5]}</span></div><input aria-label="peso" type="number" step="0.5" placeholder="kg" value="${d[i]?.weight||''}" onchange="setEx(${i},'weight',this.value)"><div><b>${x[3]}×</b><small>${x[4]}</small></div></div>`).join('');
+    }
+    
+    function setEx(i,f,v){
+      state.drafts[current]??={};
+      state.drafts[current][i]??={};
+      state.drafts[current][i][f]=v;
+      if(f==='weight'&&v!==''&&Number(v)>=0)state.drafts[current][i].done=true;
+      persist();
+      renderWorkout();
+    }
+    
+    function finishWorkout(){
+      let d=state.drafts[current]||{},done=Object.values(d).filter(x=>x.done).length;
+      if(!done){alert('Registre ao menos um exercício.');return}
+      
+      let selectedDate = document.getElementById('workoutDate').value;
+      if (!selectedDate) {alert('Selecione uma data válida.');return}
+
+      let vol=0;
+      PROGRAM[current].items.forEach((x,i)=>{
+        let z=d[i];
+        if(z?.done&&z.weight)vol+=Number(z.weight)*Number(x[3])*(parseInt(x[4])||10);
+      });
+
+      state.history.unshift({
+        id:Date.now(),
+        date:new Date(selectedDate + 'T12:00:00').toISOString(),
+        workout:current,
+        count:done,
+        cardio:Number(cardioMin.value)||0,
+        cardioType:cardioType.value,
+        rpe:Number(cardioRpe.value)||0,
+        volume:Math.round(vol)
+      });
+
+      state.drafts[current]={};
+      persist();
+      alert('Treino salvo com sucesso!');
+      show('history');
+    }
+    
+    function renderHistory(){
+      let from = document.getElementById('filterFrom')?.value;
+      let to = document.getElementById('filterTo')?.value;
+
+      let filtered = state.history.filter(h => {
+        let hDate = h.date.slice(0, 10);
+        if (from && hDate < from) return false;
+        if (to && hDate > to) return false;
+        return true;
+      });
+
+      historyList.innerHTML = filtered.length ? filtered.map(h => `
+        <div class="card">
+          <b>${new Date(h.date).toLocaleDateString('pt-BR')} • Treino ${h.workout}</b>
+          <small>${h.count} exer. • ${h.cardio} min ${h.cardioType} • RPE ${h.rpe}/10${h.volume ? ' • ' + h.volume + ' kg' : ''}</small>
+        </div>
+      `).join('') : '<p class="muted">Nenhum treino encontrado.</p>';
+    }
+
     function saveFree(){state.free1=free1.value;state.free2=free2.value;persist();alert('Treinos livres salvos.')}
     function updateStats(){if(VERSION<2)return;let now=new Date(),m=state.history.filter(h=>{let d=new Date(h.date);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear()});month.textContent=m.length;minutes.textContent=state.history.reduce((a,h)=>a+h.cardio+60,0);volume.textContent=state.history.reduce((a,h)=>a+(h.volume||0),0);let days=[...new Set(state.history.map(h=>h.date.slice(0,10)))].sort().reverse(),s=days.length?1:0;for(let i=1;i<days.length;i++){if((new Date(days[i-1])-new Date(days[i]))/86400000<=2)s++;else break}streak.textContent=s}
     function saveProfile(){state.profile.weight=Number(bodyWeight.value)||125;state.profile.goal=Number(goalWeight.value)||90;state.profile.waist=Number(waist.value)||0;persist();goalUI()}
@@ -140,6 +225,7 @@
     function exportCSV(){let rows=['data,treino,exercicios,cardio_min,tipo,rpe,volume_estimado'];state.history.forEach(h=>rows.push([h.date,h.workout,h.count,h.cardio,h.cardioType,h.rpe,h.volume||0].join(',')));download('historico_treinos.csv',rows.join('\n'),'text/csv')}
     function download(n,t,type){let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type}));a.download=n;a.click();URL.revokeObjectURL(a.href)}
     function importJSON(e){let f=e.target.files[0],r=new FileReader;r.onload=()=>{try{state=JSON.parse(r.result);persist();goalUI();alert('Dados importados.')}catch{alert('Arquivo inválido.')}};r.readAsText(f)}
+    
     free1.value=state.free1||'';free2.value=state.free2||'';updateStats();goalUI();
 
     // Registro do Service Worker para PWA
