@@ -46,7 +46,7 @@
       </section>
       <section class="card">
         <h3>Integração de saúde</h3>
-        <p class="muted">Este PWA salva no aparelho. Use “Exportar treino” para levar os registros a um app Android/Health Connect.</p>
+        <p class="muted">Este PWA salva no aparelho. Exporta histórico em CSV/JSON para sincronização manual ou leitura por outros apps.</p>
         <div class="row">
           <button onclick="exportJSON()">Exportar JSON</button>
           <button onclick="exportCSV()">Exportar CSV</button>
@@ -65,7 +65,7 @@
       </section>
       <section class="card">
         <h3>Segurança e intensidade</h3>
-        <p class="muted">Comece com carga que permita terminar as repetições mantendo 2–3 repetições “na reserva”. Sem dor aguda. Aumente apenas 2–5% quando completar todas as séries com técnica estável em duas sessões. Para exercícios de pernas, ajuste banco e amplitude ao conforto.</p>
+        <p class="muted">Comece com carga que permita terminar as repetições mantendo 2–3 repetições “na reserva”. Sem dor aguda. Aumente apenas 2–5% quando completar todas as séries com técnica estável em duas sessões.</p>
       </section>
     </section>
 
@@ -198,6 +198,22 @@
       show('history');
     }
     
+    function editDate(id){
+      let item = state.history.find(h => h.id === id);
+      if(!item) return;
+      let currentDate = item.date.slice(0, 10);
+      let newDate = prompt("Editar data do treino (formato AAAA-MM-DD):", currentDate);
+      if(newDate && newDate !== currentDate){
+        if(/^\d{4}-\d{2}-\d{2}$/.test(newDate)){
+          item.date = new Date(newDate + 'T12:00:00').toISOString();
+          persist();
+          renderHistory();
+        } else {
+          alert("Data inválida. Use o formato AAAA-MM-DD.");
+        }
+      }
+    }
+
     function renderHistory(){
       let from = document.getElementById('filterFrom')?.value;
       let to = document.getElementById('filterTo')?.value;
@@ -210,9 +226,12 @@
       });
 
       historyList.innerHTML = filtered.length ? filtered.map(h => `
-        <div class="card">
-          <b>${new Date(h.date).toLocaleDateString('pt-BR')} • Treino ${h.workout}</b>
-          <small>${h.count} exer. • ${h.cardio} min ${h.cardioType} • RPE ${h.rpe}/10${h.volume ? ' • ' + h.volume + ' kg' : ''}</small>
+        <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <b>${new Date(h.date).toLocaleDateString('pt-BR')} • Treino ${h.workout}</b><br>
+            <small>${h.count} exer. • ${h.cardio} min ${h.cardioType} • RPE ${h.rpe}/10${h.volume ? ' • ' + h.volume + ' kg' : ''}</small>
+          </div>
+          <button class="ghost" style="padding:6px 10px; font-size:12px;" onclick="editDate(${h.id})">✏️ Data</button>
         </div>
       `).join('') : '<p class="muted">Nenhum treino encontrado.</p>';
     }
@@ -228,7 +247,6 @@
     
     free1.value=state.free1||'';free2.value=state.free2||'';updateStats();goalUI();
 
-    // Registro do Service Worker para PWA
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js').catch(err => console.log('SW erro:', err));
